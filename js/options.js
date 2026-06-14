@@ -112,6 +112,7 @@ async function saveOptionDataToForm() {
 	form.elements['insert-button-into-video-page'].checked = await loadOptionData(optionKeys.INSERT_BUTTON_INTO_VIDEO_PAGE);
 	form.elements['parsing-server-endpoint'].value = await loadOptionData(optionKeys.PARSING_SERVER_ENDPOINT);
 	form.elements['parsing-server-mode'].value = await loadOptionData(optionKeys.PARSING_SERVER_MODE);
+	form.elements['diagnostic-log-level'].value = await loadOptionData(optionKeys.DIAGNOSTIC_LOG_LEVEL);
 
 }
 
@@ -162,7 +163,8 @@ async function onOptionsChanged(event) {
 			[optionKeys.HISTORY_RENTENTION_PERIOD]: Number(form.elements['history-retention-period'].value),
 			[optionKeys.INSERT_BUTTON_INTO_VIDEO_PAGE]: form.elements['insert-button-into-video-page'].checked,
 			[optionKeys.PARSING_SERVER_ENDPOINT]: normalizeParsingServerEndpoint(form.elements['parsing-server-endpoint'].value),
-			[optionKeys.PARSING_SERVER_MODE]: normalizeParsingServerMode(form.elements['parsing-server-mode'].value)
+			[optionKeys.PARSING_SERVER_MODE]: normalizeParsingServerMode(form.elements['parsing-server-mode'].value),
+			[optionKeys.DIAGNOSTIC_LOG_LEVEL]: normalizeDiagnosticLogLevel(form.elements['diagnostic-log-level'].value)
 		};
 		debug.log('options:', options);
 
@@ -195,6 +197,21 @@ function normalizeAppearanceTheme(theme) {
 	}
 
 	return appearanceThemes.AUTO;
+
+}
+
+/**
+ * Normalize diagnostic log level option.
+ * @param {string} logLevel - Diagnostic log level
+ * @returns {string} Normalized diagnostic log level
+ */
+function normalizeDiagnosticLogLevel(logLevel) {
+
+	if (Object.values(diagnosticLogLevels).includes(logLevel)) {
+		return logLevel;
+	}
+
+	return diagnosticLogLevels.ERROR;
 
 }
 

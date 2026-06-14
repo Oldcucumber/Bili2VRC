@@ -37,7 +37,8 @@ const optionKeys = Object.freeze({
 	HISTORY_RENTENTION_PERIOD: 'historyRententionPeriod',
 	INSERT_BUTTON_INTO_VIDEO_PAGE: 'insertButtonIntoVideoPage',
 	PARSING_SERVER_ENDPOINT: 'parsingServerEndpoint',
-	PARSING_SERVER_MODE: 'parsingServerMode'
+	PARSING_SERVER_MODE: 'parsingServerMode',
+	DIAGNOSTIC_LOG_LEVEL: 'diagnosticLogLevel'
 });
 
 /** @type {Object.<string, string>} Appearance theme values */
@@ -53,6 +54,14 @@ const parsingServerModes = Object.freeze({
 	REDIRECT_URL: 'redirectUrl'
 });
 
+/** @type {Object.<string, string>} Diagnostic log level values */
+const diagnosticLogLevels = Object.freeze({
+	OFF: 'off',
+	ERROR: 'error',
+	WARN: 'warn',
+	LOG: 'log'
+});
+
 /** @type {string} Default video parsing server endpoint */
 const defaultVideoParsingEndpoint = 'https://api.squidtail.com/bili2vrc/parse/';
 
@@ -64,7 +73,8 @@ const defaultStorageData = Object.freeze({
 		[optionKeys.HISTORY_RENTENTION_PERIOD]: 168,
 		[optionKeys.INSERT_BUTTON_INTO_VIDEO_PAGE]: true,
 		[optionKeys.PARSING_SERVER_ENDPOINT]: defaultVideoParsingEndpoint,
-		[optionKeys.PARSING_SERVER_MODE]: parsingServerModes.JSON
+		[optionKeys.PARSING_SERVER_MODE]: parsingServerModes.JSON,
+		[optionKeys.DIAGNOSTIC_LOG_LEVEL]: diagnosticLogLevels.ERROR
 	},
 	[storageKeys.HISTORY]: [],
 	[storageKeys.PARSING_STATUS]: parsingStatuses.PARSABLE,
@@ -167,6 +177,11 @@ async function recordDiagnosticLog(level, args) {
 			return;
 		}
 
+		const logLevel = await getDiagnosticLogLevelForStorage(browserObj);
+		if (shouldRecordDiagnosticLog(level, logLevel) === false) {
+			return;
+		}
+
 		const result = await browserObj.storage.local.get([storageKeys.DIAGNOSTIC_LOGS]);
 		const logs = Array.isArray(result[storageKeys.DIAGNOSTIC_LOGS]) ? result[storageKeys.DIAGNOSTIC_LOGS] : [];
 		logs.push({
@@ -182,6 +197,55 @@ async function recordDiagnosticLog(level, args) {
 	} catch (error) {
 		/* Ignore diagnostic logging errors. */
 	}
+
+}
+
+/**
+ * Get diagnostic log level without using debug logging.
+ * @param {Object.<string, *>} browserObj - Browser object
+ * @returns {Promise.<string>} Diagnostic log level
+ */
+async function getDiagnosticLogLevelForStorage(browserObj) {
+
+	try {
+		if (browserObj.storage.sync === undefined) {
+			throw new Error('Storage sync is not available');
+		}
+
+		const result = await browserObj.storage.sync.get([storageKeys.OPTIONS]);
+		const options = result[storageKeys.OPTIONS] || {};
+		const logLevel = options[optionKeys.DIAGNOSTIC_LOG_LEVEL];
+
+		if (Object.values(diagnosticLogLevels).includes(logLevel)) {
+			return logLevel;
+		}
+	} catch (error) {
+		/* Use default log level. */
+	}
+
+	return defaultStorageData[storageKeys.OPTIONS][optionKeys.DIAGNOSTIC_LOG_LEVEL];
+
+}
+
+/**
+ * Check whether a diagnostic log should be recorded.
+ * @param {string} level - Log level
+ * @param {string} minimumLevel - Minimum log level to record
+ * @returns {boolean} True: record, False: ignore
+ */
+function shouldRecordDiagnosticLog(level, minimumLevel) {
+
+	const levelWeights = {
+		[diagnosticLogLevels.ERROR]: 1,
+		[diagnosticLogLevels.WARN]: 2,
+		[diagnosticLogLevels.LOG]: 3
+	};
+
+	if (minimumLevel === diagnosticLogLevels.OFF) {
+		return false;
+	}
+
+	return levelWeights[level] <= levelWeights[minimumLevel];
 
 }
 

@@ -309,6 +309,31 @@
 		"description": "Options > Support > Diagnostics"
 	},
 
+	"options_support_diagnostics_logLevel": {
+		"message": "诊断日志等级",
+		"description": "Options > Support > Diagnostics > Diagnostic log level"
+	},
+
+	"options_support_diagnostics_logLevel_error": {
+		"message": "仅错误",
+		"description": "Options > Support > Diagnostics > Diagnostic log level > Errors only"
+	},
+
+	"options_support_diagnostics_logLevel_warn": {
+		"message": "警告和错误",
+		"description": "Options > Support > Diagnostics > Diagnostic log level > Warnings and errors"
+	},
+
+	"options_support_diagnostics_logLevel_log": {
+		"message": "全部日志",
+		"description": "Options > Support > Diagnostics > Diagnostic log level > All logs"
+	},
+
+	"options_support_diagnostics_logLevel_off": {
+		"message": "关闭",
+		"description": "Options > Support > Diagnostics > Diagnostic log level > Off"
+	},
+
 	"options_support_diagnostics_includeOptions": {
 		"message": "Options",
 		"description": "Options > Support > Diagnostics"
