@@ -72,6 +72,21 @@
 	align-items: flex-end;
 }
 
+.bili2vrc-option-note {
+	display: grid;
+	gap: 6px;
+	align-items: flex-start;
+}
+
+.bili2vrc-option-note p {
+	margin: 0;
+}
+
+.bili2vrc-option-note p:not(:first-child) {
+	overflow-wrap: anywhere;
+	font-size: 0.95em;
+}
+
 /*
 ---------------------------------------------------------------
 	Table Style

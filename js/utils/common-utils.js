@@ -36,7 +36,8 @@ const optionKeys = Object.freeze({
 	APPEARANCE_THEME: 'appearanceTheme',
 	HISTORY_RENTENTION_PERIOD: 'historyRententionPeriod',
 	INSERT_BUTTON_INTO_VIDEO_PAGE: 'insertButtonIntoVideoPage',
-	PARSING_SERVER_ENDPOINT: 'parsingServerEndpoint'
+	PARSING_SERVER_ENDPOINT: 'parsingServerEndpoint',
+	PARSING_SERVER_MODE: 'parsingServerMode'
 });
 
 /** @type {Object.<string, string>} Appearance theme values */
@@ -44,6 +45,12 @@ const appearanceThemes = Object.freeze({
 	AUTO: 'auto',
 	LIGHT: 'light',
 	DARK: 'dark'
+});
+
+/** @type {Object.<string, string>} Parsing server mode values */
+const parsingServerModes = Object.freeze({
+	JSON: 'json',
+	REDIRECT_URL: 'redirectUrl'
 });
 
 /** @type {string} Default video parsing server endpoint */
@@ -56,7 +63,8 @@ const defaultStorageData = Object.freeze({
 		[optionKeys.APPEARANCE_THEME]: appearanceThemes.AUTO,
 		[optionKeys.HISTORY_RENTENTION_PERIOD]: 168,
 		[optionKeys.INSERT_BUTTON_INTO_VIDEO_PAGE]: true,
-		[optionKeys.PARSING_SERVER_ENDPOINT]: defaultVideoParsingEndpoint
+		[optionKeys.PARSING_SERVER_ENDPOINT]: defaultVideoParsingEndpoint,
+		[optionKeys.PARSING_SERVER_MODE]: parsingServerModes.JSON
 	},
 	[storageKeys.HISTORY]: [],
 	[storageKeys.PARSING_STATUS]: parsingStatuses.PARSABLE,

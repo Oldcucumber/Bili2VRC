@@ -136,6 +136,31 @@
 							<input type="url" name="parsing-server-endpoint" placeholder="https://api.squidtail.com/bili2vrc/parse/" required>
 						</label>
 
+						<!-- Reset parsing server endpoint -->
+						<div class="bili2vrc-option-item bili2vrc-space-between bili2vrc-underline">
+							<span data-bili2vrc-msg="options_general_resetParsingServerEndpoint"></span>
+							<button id="bili2vrc-reset-parsing-server-endpoint-button" type="button">
+								<span class="material-symbols-rounded">restart_alt</span>
+								<span data-bili2vrc-msg="options_general_resetParsingServerEndpoint_reset"></span>
+							</button>
+						</div>
+
+						<!-- Parsing server mode -->
+						<label class="bili2vrc-option-item bili2vrc-space-between bili2vrc-underline">
+							<span data-bili2vrc-msg="options_general_parsingServerMode"></span>
+							<select name="parsing-server-mode" data-bili2vrc-set-lang-attribute required>
+								<option value="json" data-bili2vrc-msg="options_general_parsingServerMode_json"></option>
+								<option value="redirectUrl" data-bili2vrc-msg="options_general_parsingServerMode_redirectUrl"></option>
+							</select>
+						</label>
+
+						<!-- Parsing server format -->
+						<div class="bili2vrc-option-item bili2vrc-option-note bili2vrc-underline">
+							<p data-bili2vrc-msg="options_general_parsingServerFormat_text"></p>
+							<p data-bili2vrc-msg="options_general_parsingServerFormat_json"></p>
+							<p data-bili2vrc-msg="options_general_parsingServerFormat_redirectUrl"></p>
+						</div>
+
 						<!-- Tutorial -->
 						<div class="bili2vrc-option-item bili2vrc-space-between bili2vrc-underline">
 							<span data-bili2vrc-msg="options_general_tutorial"></span>

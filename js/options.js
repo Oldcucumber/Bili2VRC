@@ -23,6 +23,7 @@ async function init() {
 		document.getElementById('bili2vrc-view-tutorial-button').addEventListener('click', onViewTutorialButtonClick);
 		document.getElementById('bili2vrc-open-changelog-button').addEventListener('click', onOpenChangelogButtonClick);
 		document.getElementById('bili2vrc-export-diagnostics-button').addEventListener('click', onExportDiagnosticsButtonClick);
+		document.getElementById('bili2vrc-reset-parsing-server-endpoint-button').addEventListener('click', onResetParsingServerEndpointButtonClick);
 
 		/* Set language texts */
 		await setLangAttributes();
@@ -78,6 +79,25 @@ async function onOpenChangelogButtonClick(event) {
 }
 
 /**
+ * Handler executed when the reset parsing server endpoint button clicked.
+ * @param {Event} event - Event
+ */
+async function onResetParsingServerEndpointButtonClick(event) {
+
+	/* Do not update the page */
+	event.preventDefault();
+
+	/** @type {HTMLFormElement} */
+	const form = document.forms['options'];
+
+	form.elements['parsing-server-endpoint'].value = defaultVideoParsingEndpoint;
+	form.elements['parsing-server-mode'].value = parsingServerModes.JSON;
+
+	await onOptionsChanged(event);
+
+}
+
+/**
  * Reflect option data to option page.
  */
 async function saveOptionDataToForm() {
@@ -91,6 +111,7 @@ async function saveOptionDataToForm() {
 	form.elements['history-retention-period'].value = await loadOptionData(optionKeys.HISTORY_RENTENTION_PERIOD);
 	form.elements['insert-button-into-video-page'].checked = await loadOptionData(optionKeys.INSERT_BUTTON_INTO_VIDEO_PAGE);
 	form.elements['parsing-server-endpoint'].value = await loadOptionData(optionKeys.PARSING_SERVER_ENDPOINT);
+	form.elements['parsing-server-mode'].value = await loadOptionData(optionKeys.PARSING_SERVER_MODE);
 
 }
 
@@ -140,7 +161,8 @@ async function onOptionsChanged(event) {
 			[optionKeys.APPEARANCE_THEME]: normalizeAppearanceTheme(form.elements['appearance-theme'].value),
 			[optionKeys.HISTORY_RENTENTION_PERIOD]: Number(form.elements['history-retention-period'].value),
 			[optionKeys.INSERT_BUTTON_INTO_VIDEO_PAGE]: form.elements['insert-button-into-video-page'].checked,
-			[optionKeys.PARSING_SERVER_ENDPOINT]: normalizeParsingServerEndpoint(form.elements['parsing-server-endpoint'].value)
+			[optionKeys.PARSING_SERVER_ENDPOINT]: normalizeParsingServerEndpoint(form.elements['parsing-server-endpoint'].value),
+			[optionKeys.PARSING_SERVER_MODE]: normalizeParsingServerMode(form.elements['parsing-server-mode'].value)
 		};
 		debug.log('options:', options);
 
@@ -173,6 +195,21 @@ function normalizeAppearanceTheme(theme) {
 	}
 
 	return appearanceThemes.AUTO;
+
+}
+
+/**
+ * Normalize parsing server mode option.
+ * @param {string} mode - Server mode
+ * @returns {string} Normalized server mode
+ */
+function normalizeParsingServerMode(mode) {
+
+	if (Object.values(parsingServerModes).includes(mode)) {
+		return mode;
+	}
+
+	return parsingServerModes.JSON;
 
 }
 

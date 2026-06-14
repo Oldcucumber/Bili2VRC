@@ -199,6 +199,46 @@
 		"description": "Options > General > Video parsing server endpoint"
 	},
 
+	"options_general_resetParsingServerEndpoint": {
+		"message": "Reset video parsing endpoint",
+		"description": "Options > General > Reset video parsing endpoint"
+	},
+
+	"options_general_resetParsingServerEndpoint_reset": {
+		"message": "Restore default",
+		"description": "Options > General > Reset video parsing endpoint > Restore default"
+	},
+
+	"options_general_parsingServerMode": {
+		"message": "Video parsing server mode",
+		"description": "Options > General > Video parsing server mode"
+	},
+
+	"options_general_parsingServerMode_json": {
+		"message": "Default JSON API",
+		"description": "Options > General > Video parsing server mode > Default JSON API"
+	},
+
+	"options_general_parsingServerMode_redirectUrl": {
+		"message": "URL redirect",
+		"description": "Options > General > Video parsing server mode > URL redirect"
+	},
+
+	"options_general_parsingServerFormat_text": {
+		"message": "What to enter:",
+		"description": "Options > General > Video parsing server endpoint format"
+	},
+
+	"options_general_parsingServerFormat_json": {
+		"message": "Default JSON API: enter the JSON parsing service address, for example https://api.squidtail.com/bili2vrc/parse/",
+		"description": "Options > General > Video parsing server endpoint format > JSON"
+	},
+
+	"options_general_parsingServerFormat_redirectUrl": {
+		"message": "URL redirect: enter the redirect parsing service base address, for example https://example.com/",
+		"description": "Options > General > Video parsing server endpoint format > URL redirect"
+	},
+
 	"options_general_tutorial": {
 		"message": "Tutorial",
 		"description": "オプション > 全般 > チュートリアル"

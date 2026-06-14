@@ -199,6 +199,46 @@
 		"description": "Options > General > Video parsing server endpoint"
 	},
 
+	"options_general_resetParsingServerEndpoint": {
+		"message": "恢复默认解析链接",
+		"description": "Options > General > Reset video parsing endpoint"
+	},
+
+	"options_general_resetParsingServerEndpoint_reset": {
+		"message": "恢复默认",
+		"description": "Options > General > Reset video parsing endpoint > Restore default"
+	},
+
+	"options_general_parsingServerMode": {
+		"message": "解析服务器模式",
+		"description": "Options > General > Video parsing server mode"
+	},
+
+	"options_general_parsingServerMode_json": {
+		"message": "默认 JSON API",
+		"description": "Options > General > Video parsing server mode > Default JSON API"
+	},
+
+	"options_general_parsingServerMode_redirectUrl": {
+		"message": "URL 跳转",
+		"description": "Options > General > Video parsing server mode > URL redirect"
+	},
+
+	"options_general_parsingServerFormat_text": {
+		"message": "这里应该填写：",
+		"description": "Options > General > Video parsing server endpoint format"
+	},
+
+	"options_general_parsingServerFormat_json": {
+		"message": "默认 JSON API：填写 JSON 解析服务地址，例如 https://api.squidtail.com/bili2vrc/parse/",
+		"description": "Options > General > Video parsing server endpoint format > JSON"
+	},
+
+	"options_general_parsingServerFormat_redirectUrl": {
+		"message": "URL 跳转：填写跳转解析服务的基础地址，例如 https://example.com/",
+		"description": "Options > General > Video parsing server endpoint format > URL redirect"
+	},
+
 	"options_general_tutorial": {
 		"message": "教程",
 		"description": "オプション > 全般 > チュートリアル"

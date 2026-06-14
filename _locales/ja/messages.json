@@ -199,6 +199,46 @@
 		"description": "Options > General > Video parsing server endpoint"
 	},
 
+	"options_general_resetParsingServerEndpoint": {
+		"message": "既定の解析リンクに戻す",
+		"description": "Options > General > Reset video parsing endpoint"
+	},
+
+	"options_general_resetParsingServerEndpoint_reset": {
+		"message": "既定に戻す",
+		"description": "Options > General > Reset video parsing endpoint > Restore default"
+	},
+
+	"options_general_parsingServerMode": {
+		"message": "動画変換サーバーモード",
+		"description": "Options > General > Video parsing server mode"
+	},
+
+	"options_general_parsingServerMode_json": {
+		"message": "既定 JSON API",
+		"description": "Options > General > Video parsing server mode > Default JSON API"
+	},
+
+	"options_general_parsingServerMode_redirectUrl": {
+		"message": "URL リダイレクト",
+		"description": "Options > General > Video parsing server mode > URL redirect"
+	},
+
+	"options_general_parsingServerFormat_text": {
+		"message": "入力する内容:",
+		"description": "Options > General > Video parsing server endpoint format"
+	},
+
+	"options_general_parsingServerFormat_json": {
+		"message": "既定 JSON API: JSON 解析サービスのアドレスを入力します。例: https://api.squidtail.com/bili2vrc/parse/",
+		"description": "Options > General > Video parsing server endpoint format > JSON"
+	},
+
+	"options_general_parsingServerFormat_redirectUrl": {
+		"message": "URL リダイレクト: リダイレクト解析サービスのベースアドレスを入力します。例: https://example.com/",
+		"description": "Options > General > Video parsing server endpoint format > URL redirect"
+	},
+
 	"options_general_tutorial": {
 		"message": "チュートリアル",
 		"description": "オプション > 全般 > チュートリアル"
