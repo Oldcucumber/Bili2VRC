@@ -234,6 +234,22 @@ async function showParsingSuccessfulPopup(videoQualityCode, videoTitle) {
 }
 
 /**
+ * Show URL composition successful popup.
+ */
+async function showURLCompositionSuccessfulPopup() {
+
+	/* Create popup inner element */
+	const popupInnerElement = document.createElement('div');
+	popupInnerElement.setAttribute('data-bili2vrc-msg-src', 'popup/url-composition-successful.html');
+
+	/* Create and show the popup */
+	const popupElement = createPopup(popupInnerElement, popupThemeColors.GREEN);
+	await includeHTMLs();
+	showPopup(popupElement);
+
+}
+
+/**
  * Show clipboard write successful popup.
  * @param {number} videoQualityCode - Video quality code
  * @param {string} videoTitle - Video title

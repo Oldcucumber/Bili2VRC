@@ -51,7 +51,8 @@ const appearanceThemes = Object.freeze({
 /** @type {Object.<string, string>} Parsing server mode values */
 const parsingServerModes = Object.freeze({
 	JSON: 'json',
-	REDIRECT_URL: 'redirectUrl'
+	REDIRECT_URL: 'redirectUrl',
+	URL_CONCATENATION: 'urlConcatenation'
 });
 
 /** @type {Object.<string, string>} Diagnostic log level values */

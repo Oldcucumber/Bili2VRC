@@ -122,6 +122,11 @@ async function requestVideoParsing(videoPageURL) {
 			return false;
 		}
 
+		/* Compose and copy the URL without requesting a parsing service */
+		if (await getVideoParsingMode() === parsingServerModes.URL_CONCATENATION) {
+			return await composeAndCopyVideoURL(videoInfo.bvid, videoInfo.p);
+		}
+
 		/* Search parsing history */
 		const historyItem = await getHistoryItem(videoInfo.bvid, videoInfo.p, now);
 		if (
@@ -396,6 +401,31 @@ async function getParsedVideoData(bvid, p) {
 
 		return undefined;
 
+	}
+
+}
+
+/**
+ * Compose and copy a video URL without requesting a parsing service.
+ * @param {string} bvid - Video ID (bvid)
+ * @param {number} p - Video page number (p)
+ * @returns {Promise.<boolean>} True: successful, False: failed
+ */
+async function composeAndCopyVideoURL(bvid, p) {
+
+	try {
+		const endpoint = await getVideoParsingEndpoint();
+		const videoURL = getVideoPageURL(bvid, p);
+		const composedURL = `${endpoint}${encodeURIComponent(videoURL)}`;
+
+		await writeTextToClipboard(composedURL);
+		await showURLCompositionSuccessfulPopup();
+		debug.log('composed video URL:', composedURL);
+
+		return true;
+	} catch (error) {
+		await showClipboardWriteFailedPopup(error.stack);
+		return false;
 	}
 
 }

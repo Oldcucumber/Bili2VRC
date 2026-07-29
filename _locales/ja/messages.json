@@ -224,6 +224,11 @@
 		"description": "Options > General > Video parsing server mode > URL redirect"
 	},
 
+	"options_general_parsingServerMode_urlConcatenation": {
+		"message": "URL 結合",
+		"description": "Options > General > Video parsing server mode > URL concatenation"
+	},
+
 	"options_general_parsingServerFormat_text": {
 		"message": "入力する内容:",
 		"description": "Options > General > Video parsing server endpoint format"
@@ -237,6 +242,11 @@
 	"options_general_parsingServerFormat_redirectUrl": {
 		"message": "URL リダイレクト: リダイレクト解析サービスのベースアドレスを入力します。例: https://example.com/",
 		"description": "Options > General > Video parsing server endpoint format > URL redirect"
+	},
+
+	"options_general_parsingServerFormat_urlConcatenation": {
+		"message": "URL 結合: Bilibili 動画リンクの前に付ける完全な接頭辞を入力します。動画リンクは自動でエンコードされます。",
+		"description": "Options > General > Video parsing server endpoint format > URL concatenation"
 	},
 
 	"options_general_tutorial": {

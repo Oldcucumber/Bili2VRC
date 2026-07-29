@@ -224,6 +224,11 @@
 		"description": "Options > General > Video parsing server mode > URL redirect"
 	},
 
+	"options_general_parsingServerMode_urlConcatenation": {
+		"message": "URL concatenation",
+		"description": "Options > General > Video parsing server mode > URL concatenation"
+	},
+
 	"options_general_parsingServerFormat_text": {
 		"message": "What to enter:",
 		"description": "Options > General > Video parsing server endpoint format"
@@ -237,6 +242,11 @@
 	"options_general_parsingServerFormat_redirectUrl": {
 		"message": "URL redirect: enter the redirect parsing service base address, for example https://example.com/",
 		"description": "Options > General > Video parsing server endpoint format > URL redirect"
+	},
+
+	"options_general_parsingServerFormat_urlConcatenation": {
+		"message": "URL concatenation: enter the complete prefix to place before the Bilibili video link. The video link is encoded automatically.",
+		"description": "Options > General > Video parsing server endpoint format > URL concatenation"
 	},
 
 	"options_general_tutorial": {

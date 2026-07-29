@@ -224,6 +224,11 @@
 		"description": "Options > General > Video parsing server mode > URL redirect"
 	},
 
+	"options_general_parsingServerMode_urlConcatenation": {
+		"message": "連結拼接",
+		"description": "Options > General > Video parsing server mode > URL concatenation"
+	},
+
 	"options_general_parsingServerFormat_text": {
 		"message": "這裡應該填寫：",
 		"description": "Options > General > Video parsing server endpoint format"
@@ -237,6 +242,11 @@
 	"options_general_parsingServerFormat_redirectUrl": {
 		"message": "URL 跳轉：填寫跳轉解析服務的基礎位址，例如 https://example.com/",
 		"description": "Options > General > Video parsing server endpoint format > URL redirect"
+	},
+
+	"options_general_parsingServerFormat_urlConcatenation": {
+		"message": "連結拼接：填寫放在 Bilibili 影片連結前的完整前綴，外掛會自動編碼影片連結。",
+		"description": "Options > General > Video parsing server endpoint format > URL concatenation"
 	},
 
 	"options_general_tutorial": {
