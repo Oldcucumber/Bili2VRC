@@ -97,12 +97,48 @@ async function onMessageReceive(request, sender, sendResponse) {
 			sendResponse({status: 'successful'});
 			break;
 
+		/* Fetch a video parsing redirect outside the content script CORS context */
+		case 'fetchVideoParsingRedirect':
+			try {
+				const response = await fetchVideoParsingRedirect(request.url, request.timeout);
+				sendResponse({status: 'successful', response: response});
+			} catch (error) {
+				sendResponse({status: 'error', message: error.message});
+			}
+			break;
+
 		/* Other message */
 		default:
 			sendResponse({status: 'error'});
 			throw new Error('Unknown message received');
 
 	}
+
+}
+
+/**
+ * Fetch a video parsing redirect from the extension service worker.
+ * @param {string} requestURL - Video parsing request URL
+ * @param {number} timeout - Timeout duration (ms)
+ * @returns {Promise.<Object.<string, *>>} Redirect response data
+ */
+async function fetchVideoParsingRedirect(requestURL, timeout) {
+
+	let response = await fetchWithTimeout(requestURL, {redirect: 'manual'}, timeout);
+	let location = response.headers.get('location');
+
+	if (location === null) {
+		response = await fetchWithTimeout(requestURL, {redirect: 'follow'}, timeout);
+		if (response.ok === false) {
+			throw new Error(`Video parsing redirect server returned HTTP ${response.status}`);
+		}
+		location = response.url;
+	}
+
+	return {
+		location: location,
+		requestURL: response.url
+	};
 
 }
 

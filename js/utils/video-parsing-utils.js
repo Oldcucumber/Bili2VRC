@@ -481,17 +481,9 @@ async function getParsedVideoDataFromRedirectURLServer(bvid, p) {
 	const requestURL = new URL(await getVideoParsingEndpoint());
 	requestURL.searchParams.set('url', getVideoPageURL(bvid, p));
 
-	/* Send request */
-	let response = await fetchWithTimeout(requestURL, {redirect: 'manual'}, videoParsingFetchTimeout);
-	let parsedVideoURL = response.headers.get('location');
-
-	if (parsedVideoURL === null) {
-		response = await fetchWithTimeout(requestURL, {redirect: 'follow'}, videoParsingFetchTimeout);
-		if (response.ok === false) {
-			throw new Error(`Video parsing redirect server returned HTTP ${response.status}`);
-		}
-		parsedVideoURL = response.url;
-	}
+	/* Send request from the extension service worker to avoid content script CORS restrictions */
+	const redirectResponse = await requestVideoParsingRedirect(requestURL.toString());
+	let parsedVideoURL = redirectResponse.location;
 
 	parsedVideoURL = normalizeParsedVideoURL(parsedVideoURL, requestURL);
 	debug.log('video parsing redirect URL:', parsedVideoURL);
@@ -502,6 +494,28 @@ async function getParsedVideoDataFromRedirectURLServer(bvid, p) {
 		parsedVideoResponseCode: 0,
 		parsedVideoResponseMessage: 'OK'
 	};
+
+}
+
+/**
+ * Request a video parsing redirect from the extension service worker.
+ * @param {string} requestURL - Video parsing request URL
+ * @returns {Promise.<Object.<string, *>>} Redirect response data
+ */
+async function requestVideoParsingRedirect(requestURL) {
+
+	const browserObj = getBrowserObject();
+	const result = await browserObj.runtime.sendMessage({
+		action: 'fetchVideoParsingRedirect',
+		url: requestURL,
+		timeout: videoParsingFetchTimeout
+	});
+
+	if (result.status !== 'successful') {
+		throw new Error(result.message || 'Video parsing redirect request failed');
+	}
+
+	return result.response;
 
 }
 
