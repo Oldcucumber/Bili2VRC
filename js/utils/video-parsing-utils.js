@@ -18,9 +18,6 @@ const reuseExpirationTime = 1000 * 60 * 60;
 /* Parsing cooldown duration (ms) */
 const parsingCooldownTime = 1000 * 5;
 
-/* Video parsing API timeout duration (ms) */
-const videoParsingFetchTimeout = 1000 * 20;
-
 /** @type {Object.<number, string>} Video quality texts */
 const videoQualityTexts = Object.freeze({
 	6: '240P 极速',
@@ -122,16 +119,14 @@ async function requestVideoParsing(videoPageURL) {
 			return false;
 		}
 
-		/* Compose and copy the URL without requesting a parsing service */
-		if (await getVideoParsingMode() === parsingServerModes.URL_CONCATENATION) {
-			return await composeAndCopyVideoURL(videoInfo.bvid, videoInfo.p);
-		}
-
+		const channel = await loadOptionData(optionKeys.PARSING_CHANNEL);
 		/* Search parsing history */
 		const historyItem = await getHistoryItem(videoInfo.bvid, videoInfo.p, now);
 		if (
 			historyItem &&
-			historyItem.lastParsingTimestamp > now - reuseExpirationTime
+			historyItem.parsingChannel === channel &&
+			historyItem.lastParsingTimestamp > now - reuseExpirationTime &&
+			await validateCachedVideoURL(historyItem.parsedVideoURL)
 		) {
 			await updateLastUsedTimestamp(historyItem.bvid, historyItem.p, now);
 			try {
@@ -152,9 +147,7 @@ async function requestVideoParsing(videoPageURL) {
 		}
 
 		/* Parse the video */
-		const parsingResult = await parseVideo(videoInfo.bvid, videoInfo.p);
-
-		return parsingResult;
+		return await parseVideo(videoInfo.bvid, videoInfo.p, channel);
 
 	} catch (error) {
 
@@ -175,9 +168,10 @@ async function requestVideoParsing(videoPageURL) {
  * Parse the current tab's video.
  * @param {string} bvid - Video ID (bvid)
  * @param {number} p - Video page number (p)
+ * @param {string} channel - Selected parsing channel
  * @returns {Promise.<boolean>} True: successful, False: failed
  */
-async function parseVideo(bvid, p) {
+async function parseVideo(bvid, p, channel) {
 
 	debug.log('Parsing the video...');
 
@@ -189,6 +183,7 @@ async function parseVideo(bvid, p) {
 
 		/* Set default value */
 		const basicVideoInfo = {
+			parsingChannel: channel,
 			bvid: bvid,
 			p: p,
 			url: getVideoPageURL(bvid, p)
@@ -200,7 +195,7 @@ async function parseVideo(bvid, p) {
 		debug.log('detailed video info:', detailedVideoInfo);
 
 		/* Send parsing request to Web API */
-		const parsedVideoData = await getParsedVideoData(bvid, p);
+		const parsedVideoData = await getParsedVideoData(bvid, p, channel);
 		if (parsedVideoData === undefined) {
 			return false;
 		}
@@ -303,14 +298,12 @@ function getBvidAndPageNoFromURL(videoPageURL) {
 	}
 
 	/* Get video page number (p) */
-	const url = new URL(videoPageURL)
-	const params = new URLSearchParams(url.search);
-	const pageNo = Number(params.get('p'));
-	if (pageNo) {
-		videoInfo.p = pageNo;
-	} else {
-		videoInfo.p = 1;
+	const url = new URL(videoPageURL);
+	const pageNo = Number(url.searchParams.get('p') || 1);
+	if (!Number.isSafeInteger(pageNo) || pageNo < 1) {
+		throw new Error('Invalid video page number');
 	}
+	videoInfo.p = pageNo;
 
 	return videoInfo;
 
@@ -355,7 +348,7 @@ async function getDetailedVideoInfo(bvid, p) {
 
 		/* extract video info */
 		const pages = Array.isArray(detailedVideoInfo.data.pages) ? detailedVideoInfo.data.pages : [];
-		const pageInfo = pages.find(page => page.page === p) || pages[0];
+		const pageInfo = pages.find(page => page.page === p);
 		if (pageInfo === undefined) {
 			throw new Error('Bilibili API returned no page info');
 		}
@@ -369,11 +362,9 @@ async function getDetailedVideoInfo(bvid, p) {
 
 		debug.log(error);
 
-	} finally {
-
-		return result;
-
 	}
+
+	return result;
 
 }
 
@@ -381,22 +372,42 @@ async function getDetailedVideoInfo(bvid, p) {
  * Parse the video using the video parsing API and fetch the processed data.
  * @param {string} bvid - Video ID (bvid)
  * @param {number} p - Video page number (p)
+ * @param {string} channel - Selected parsing channel
  * @returns {Promise.<Object.<string, *>>} Parsed video data
  */
-async function getParsedVideoData(bvid, p) {
+async function getParsedVideoData(bvid, p, channel) {
 
+	let result;
+	let phase = 'message';
 	try {
 
-		const parsingServerMode = await getVideoParsingMode();
-		if (parsingServerMode === parsingServerModes.REDIRECT_URL) {
-			return await getParsedVideoDataFromRedirectURLServer(bvid, p);
+		result = await getBrowserObject().runtime.sendMessage({
+			action: 'fetchVideoParsingData',
+			channel: channel,
+			bvid: bvid,
+			p: p
+		});
+		phase = 'response';
+		if (result?.status !== 'successful') {
+			throw new Error(result?.message || 'Video parsing request failed');
 		}
-
-		return await getParsedVideoDataFromJSONServer(bvid, p);
+		if (!result.response || typeof result.response.parsedVideoResponseCode !== 'number') {
+			throw new Error('Video parsing background returned an invalid response');
+		}
+		return result.response;
 
 	} catch (error) {
 
 		/* Display fetch failed popup */
+		console.error('[Bili2VRC] Video parsing failed:', error);
+		await recordDiagnosticLog('error', ['parse', {
+			channel: channel,
+			bvid: bvid,
+			p: p,
+			phase: phase,
+			response: result === undefined ? null : result,
+			error: error.message || String(error)
+		}]);
 		await showFetchFailedPopup(error.stack);
 
 		return undefined;
@@ -406,175 +417,20 @@ async function getParsedVideoData(bvid, p) {
 }
 
 /**
- * Compose and copy a video URL without requesting a parsing service.
- * @param {string} bvid - Video ID (bvid)
- * @param {number} p - Video page number (p)
- * @returns {Promise.<boolean>} True: successful, False: failed
+ * Recheck cached links before copying them; failed links are parsed again.
+ * @param {string} url - Cached video URL
+ * @returns {Promise.<boolean>} Whether the cached link is still usable
  */
-async function composeAndCopyVideoURL(bvid, p) {
+async function validateCachedVideoURL(url) {
 
 	try {
-		const endpoint = await getVideoParsingEndpoint();
-		const videoURL = getVideoPageURL(bvid, p);
-		const composedURL = `${endpoint}${encodeURIComponent(videoURL)}`;
-
-		await writeTextToClipboard(composedURL);
-		await showURLCompositionSuccessfulPopup();
-		debug.log('composed video URL:', composedURL);
-
-		return true;
+		const normalizedURL = normalizeParsedVideoURL(url);
+		const result = await getBrowserObject().runtime.sendMessage({action: 'validateVideoURL', url: normalizedURL});
+		return result?.status === 'successful';
 	} catch (error) {
-		await showClipboardWriteFailedPopup(error.stack);
+		debug.warn('Cached video link is no longer usable:', error);
 		return false;
 	}
-
-}
-
-/**
- * Parse the video using a JSON video parsing API.
- * @param {string} bvid - Video ID (bvid)
- * @param {number} p - Video page number (p)
- * @returns {Promise.<Object.<string, *>>} Parsed video data
- */
-async function getParsedVideoDataFromJSONServer(bvid, p) {
-
-	/* Create request URL */
-	const requestURL = new URL(await getVideoParsingEndpoint());
-	requestURL.searchParams.set('bv', bvid);
-	requestURL.searchParams.set('p', p);
-	requestURL.searchParams.set('format', 'mp4');
-	requestURL.searchParams.set('otype', 'json');
-
-	/* Send request */
-	const response = await fetchWithTimeout(requestURL, {}, videoParsingFetchTimeout);
-	if (response.ok === false) {
-		throw new Error(`Video parsing API returned HTTP ${response.status}`);
-	}
-	const parsedVideoData = await response.json();
-	debug.log('bilibili-parse API:', parsedVideoData);
-
-	if (parsedVideoData === undefined || parsedVideoData.code === undefined) {
-		throw new Error('Video parsing API returned invalid data');
-	}
-
-	/* Set return value */
-	const result = {
-		parsedVideoURL: parsedVideoData.url,
-		parsedVideoQuality: parsedVideoData.quality,
-		parsedVideoResponseCode: parsedVideoData.code,
-		parsedVideoResponseMessage: parsedVideoData.message
-	};
-
-	return result;
-
-}
-
-/**
- * Parse the video using a redirect URL video parsing API.
- * @param {string} bvid - Video ID (bvid)
- * @param {number} p - Video page number (p)
- * @returns {Promise.<Object.<string, *>>} Parsed video data
- */
-async function getParsedVideoDataFromRedirectURLServer(bvid, p) {
-
-	/* Create request URL */
-	const requestURL = new URL(await getVideoParsingEndpoint());
-	requestURL.searchParams.set('url', getVideoPageURL(bvid, p));
-
-	/* Send request from the extension service worker to avoid content script CORS restrictions */
-	const redirectResponse = await requestVideoParsingRedirect(requestURL.toString());
-	let parsedVideoURL = redirectResponse.location;
-
-	parsedVideoURL = normalizeParsedVideoURL(parsedVideoURL, requestURL);
-	debug.log('video parsing redirect URL:', parsedVideoURL);
-
-	return {
-		parsedVideoURL,
-		parsedVideoQuality: 64,
-		parsedVideoResponseCode: 0,
-		parsedVideoResponseMessage: 'OK'
-	};
-
-}
-
-/**
- * Request a video parsing redirect from the extension service worker.
- * @param {string} requestURL - Video parsing request URL
- * @returns {Promise.<Object.<string, *>>} Redirect response data
- */
-async function requestVideoParsingRedirect(requestURL) {
-
-	const browserObj = getBrowserObject();
-	const result = await browserObj.runtime.sendMessage({
-		action: 'fetchVideoParsingRedirect',
-		url: requestURL,
-		timeout: videoParsingFetchTimeout
-	});
-
-	if (result.status !== 'successful') {
-		throw new Error(result.message || 'Video parsing redirect request failed');
-	}
-
-	return result.response;
-
-}
-
-/**
- * Normalize and validate parsed video URL.
- * @param {string} parsedVideoURL - Parsed video URL
- * @param {URL} baseURL - Base URL
- * @returns {string} Normalized parsed video URL
- */
-function normalizeParsedVideoURL(parsedVideoURL, baseURL) {
-
-	const url = new URL(parsedVideoURL, baseURL);
-	const validHostSuffixes = ['.bilivideo.com', '.bilivideo.cn', '.akamaized.net', '.cloudfront.net'];
-	const hostname = url.hostname.toLowerCase();
-	const isValidHost = validHostSuffixes.some((suffix) => hostname.endsWith(suffix));
-
-	if (['http:', 'https:'].includes(url.protocol) === false) {
-		throw new Error('Video parsing redirect server returned unsupported protocol');
-	}
-
-	if (isValidHost === false || url.pathname.includes('.mp4') === false) {
-		throw new Error('Video parsing redirect server returned invalid video URL');
-	}
-
-	return url.toString();
-
-}
-
-/**
- * Get video parsing server endpoint.
- * @returns {Promise.<string>} Video parsing server endpoint
- */
-async function getVideoParsingEndpoint() {
-
-	try {
-		const endpoint = await loadOptionData(optionKeys.PARSING_SERVER_ENDPOINT);
-		const url = new URL(endpoint);
-		if (['http:', 'https:'].includes(url.protocol) === false) {
-			throw new Error('Unsupported protocol');
-		}
-		return url.toString();
-	} catch (error) {
-		debug.warn('Invalid parsing server endpoint. Use default endpoint.', error);
-		return defaultVideoParsingEndpoint;
-	}
-
-}
-
-/**
- * Get video parsing server mode.
- * @returns {Promise.<string>} Video parsing server mode
- */
-async function getVideoParsingMode() {
-
-	const mode = await loadOptionData(optionKeys.PARSING_SERVER_MODE);
-	if (Object.values(parsingServerModes).includes(mode)) {
-		return mode;
-	}
-	return parsingServerModes.JSON;
 
 }
 

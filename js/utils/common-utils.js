@@ -36,8 +36,7 @@ const optionKeys = Object.freeze({
 	APPEARANCE_THEME: 'appearanceTheme',
 	HISTORY_RENTENTION_PERIOD: 'historyRententionPeriod',
 	INSERT_BUTTON_INTO_VIDEO_PAGE: 'insertButtonIntoVideoPage',
-	PARSING_SERVER_ENDPOINT: 'parsingServerEndpoint',
-	PARSING_SERVER_MODE: 'parsingServerMode',
+	PARSING_CHANNEL: 'parsingChannel',
 	DIAGNOSTIC_LOG_LEVEL: 'diagnosticLogLevel'
 });
 
@@ -48,11 +47,11 @@ const appearanceThemes = Object.freeze({
 	DARK: 'dark'
 });
 
-/** @type {Object.<string, string>} Parsing server mode values */
-const parsingServerModes = Object.freeze({
-	JSON: 'json',
-	REDIRECT_URL: 'redirectUrl',
-	URL_CONCATENATION: 'urlConcatenation'
+/** @type {Object.<string, string>} Built-in parsing channels */
+const parsingChannels = Object.freeze({
+	DEFAULT: 'default',
+	LOCAL: 'local',
+	PUREK: 'pureK'
 });
 
 /** @type {Object.<string, string>} Diagnostic log level values */
@@ -63,8 +62,11 @@ const diagnosticLogLevels = Object.freeze({
 	LOG: 'log'
 });
 
-/** @type {string} Default video parsing server endpoint */
-const defaultVideoParsingEndpoint = 'https://api.squidtail.com/bili2vrc/parse/';
+const parsingChannelEndpoints = Object.freeze({
+	[parsingChannels.DEFAULT]: 'https://api.squidtail.com/bili2vrc/parse/',
+	[parsingChannels.LOCAL]: 'https://api.bilibili.com/x/web-interface/view',
+	[parsingChannels.PUREK]: 'https://ckapi.sevenbrothers.cn/bili/api'
+});
 
 /** @type {Object.<string, *>} Default storage data */
 const defaultStorageData = Object.freeze({
@@ -73,8 +75,7 @@ const defaultStorageData = Object.freeze({
 		[optionKeys.APPEARANCE_THEME]: appearanceThemes.AUTO,
 		[optionKeys.HISTORY_RENTENTION_PERIOD]: 168,
 		[optionKeys.INSERT_BUTTON_INTO_VIDEO_PAGE]: true,
-		[optionKeys.PARSING_SERVER_ENDPOINT]: defaultVideoParsingEndpoint,
-		[optionKeys.PARSING_SERVER_MODE]: parsingServerModes.JSON,
+		[optionKeys.PARSING_CHANNEL]: parsingChannels.DEFAULT,
 		[optionKeys.DIAGNOSTIC_LOG_LEVEL]: diagnosticLogLevels.ERROR
 	},
 	[storageKeys.HISTORY]: [],
@@ -93,6 +94,9 @@ const getBVIDRegexp = /https:\/\/www.bilibili.com\/.*(BV[a-zA-Z0-9]{10})/;
 
 /** @type {number} Default timeout duration for fetch requests (ms) */
 const defaultFetchTimeout = 1000 * 15;
+
+/** @type {number} Timeout for parsing requests and their response bodies (ms) */
+const videoParsingFetchTimeout = 1000 * 20;
 
 /** @type {Map.<string, *>} Cache for extension package resources */
 const extensionResourceCache = new Map();
@@ -650,6 +654,91 @@ function isCorrectStorageKey(key) {
 }
 
 /**
+ * Migrate recognized legacy endpoints without retaining arbitrary servers.
+ * @param {Object.<string, *>} options - Stored options
+ * @returns {Object.<string, *>} Normalized options
+ */
+function normalizeParsingOptions(options) {
+
+	const normalized = {...options};
+	let channel = normalized[optionKeys.PARSING_CHANNEL];
+	if (channel === 'biliplayer') {
+		channel = parsingChannels.LOCAL;
+	}
+	if (Object.values(parsingChannels).includes(channel) === false) {
+		channel = parsingChannels.DEFAULT;
+		try {
+			const legacyURL = new URL(options.parsingServerEndpoint);
+			if (legacyURL.hostname === 'biliplayer.91vrchat.com' && /^\/player\/?$/.test(legacyURL.pathname)) {
+				channel = parsingChannels.LOCAL;
+			} else if (legacyURL.hostname === 'ckapi.sevenbrothers.cn' && legacyURL.pathname === '/bili/api') {
+				channel = parsingChannels.PUREK;
+			}
+		} catch (error) {
+			/* Missing or unrecognized endpoints use the default channel. */
+		}
+	}
+	normalized[optionKeys.PARSING_CHANNEL] = channel;
+	delete normalized.parsingServerEndpoint;
+	delete normalized.parsingServerMode;
+	delete normalized.parsingLinkMode;
+	return normalized;
+
+}
+
+/**
+ * Build a request using only a built-in channel and validated video identifiers.
+ * @param {string} channel - Channel identifier
+ * @param {string} bvid - Video identifier
+ * @param {number} p - Video page number
+ * @returns {URL} Parsing request URL
+ */
+function getVideoParsingRequestURL(channel, bvid, p) {
+
+	if (Object.values(parsingChannels).includes(channel) === false) {
+		throw new Error('Unknown parsing channel');
+	}
+	if (/^BV[a-zA-Z0-9]{10}$/.test(bvid) === false || Number.isSafeInteger(p) === false || p < 1) {
+		throw new Error('Invalid video identifier or page number');
+	}
+	const url = new URL(parsingChannelEndpoints[channel]);
+	if (channel === parsingChannels.DEFAULT) {
+		url.searchParams.set('bv', bvid);
+		url.searchParams.set('p', p);
+		url.searchParams.set('format', 'mp4');
+		url.searchParams.set('otype', 'json');
+	} else if (channel === parsingChannels.LOCAL) {
+		url.searchParams.set('bvid', bvid);
+	} else {
+		url.searchParams.set('id', bvid);
+		url.searchParams.set('p', p);
+	}
+	return url;
+
+}
+
+/**
+ * Reject parser pages, unsupported hosts, expired links and non-MP4 results.
+ * @param {string} value - Parsed URL
+ * @returns {string} Normalized media URL
+ */
+function normalizeParsedVideoURL(value) {
+
+	const url = new URL(value);
+	const hostSuffixes = ['.bilivideo.com', '.bilivideo.cn', '.akamaized.net', '.cloudfront.net'];
+	if (['http:', 'https:'].includes(url.protocol) === false || url.username || url.password ||
+		hostSuffixes.some(suffix => url.hostname.endsWith(suffix)) === false || /\.mp4$/i.test(url.pathname) === false) {
+		throw new Error('Parsing channel returned an invalid MP4 URL');
+	}
+	const deadline = Number(url.searchParams.get('deadline'));
+	if (deadline > 0 && deadline * 1000 <= Date.now()) {
+		throw new Error('Parsing channel returned an expired video URL');
+	}
+	return url.toString();
+
+}
+
+/**
  * Load option data.
  * @param {string} key - Key of the option data
  * @returns {Promise.<*>} Option data
@@ -657,7 +746,11 @@ function isCorrectStorageKey(key) {
 async function loadOptionData(key) {
 
 	/* Get option data from storage */
-	const options = await loadFromStorage(storageKeys.OPTIONS, true) || {};
+	const storedOptions = await loadFromStorage(storageKeys.OPTIONS, true) || {};
+	const options = normalizeParsingOptions(storedOptions);
+	if (JSON.stringify(options) !== JSON.stringify(storedOptions)) {
+		await saveToStorage(storageKeys.OPTIONS, options, true);
+	}
 	const defaultOptions = defaultStorageData[storageKeys.OPTIONS];
 
 	/* If the key is missing from the object,

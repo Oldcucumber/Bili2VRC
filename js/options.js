@@ -23,7 +23,7 @@ async function init() {
 		document.getElementById('bili2vrc-view-tutorial-button').addEventListener('click', onViewTutorialButtonClick);
 		document.getElementById('bili2vrc-open-changelog-button').addEventListener('click', onOpenChangelogButtonClick);
 		document.getElementById('bili2vrc-export-diagnostics-button').addEventListener('click', onExportDiagnosticsButtonClick);
-		document.getElementById('bili2vrc-reset-parsing-server-endpoint-button').addEventListener('click', onResetParsingServerEndpointButtonClick);
+		document.getElementById('bili2vrc-reset-parsing-channel-button').addEventListener('click', onResetParsingChannelButtonClick);
 
 		/* Set language texts */
 		await setLangAttributes();
@@ -79,10 +79,10 @@ async function onOpenChangelogButtonClick(event) {
 }
 
 /**
- * Handler executed when the reset parsing server endpoint button clicked.
+ * Handler executed when the reset parsing channel button clicked.
  * @param {Event} event - Event
  */
-async function onResetParsingServerEndpointButtonClick(event) {
+async function onResetParsingChannelButtonClick(event) {
 
 	/* Do not update the page */
 	event.preventDefault();
@@ -90,8 +90,7 @@ async function onResetParsingServerEndpointButtonClick(event) {
 	/** @type {HTMLFormElement} */
 	const form = document.forms['options'];
 
-	form.elements['parsing-server-endpoint'].value = defaultVideoParsingEndpoint;
-	form.elements['parsing-server-mode'].value = parsingServerModes.JSON;
+	form.elements['parsing-channel'].value = parsingChannels.DEFAULT;
 
 	await onOptionsChanged(event);
 
@@ -110,8 +109,7 @@ async function saveOptionDataToForm() {
 	form.elements['appearance-theme'].value = await loadOptionData(optionKeys.APPEARANCE_THEME);
 	form.elements['history-retention-period'].value = await loadOptionData(optionKeys.HISTORY_RENTENTION_PERIOD);
 	form.elements['insert-button-into-video-page'].checked = await loadOptionData(optionKeys.INSERT_BUTTON_INTO_VIDEO_PAGE);
-	form.elements['parsing-server-endpoint'].value = await loadOptionData(optionKeys.PARSING_SERVER_ENDPOINT);
-	form.elements['parsing-server-mode'].value = await loadOptionData(optionKeys.PARSING_SERVER_MODE);
+	form.elements['parsing-channel'].value = await loadOptionData(optionKeys.PARSING_CHANNEL);
 	form.elements['diagnostic-log-level'].value = await loadOptionData(optionKeys.DIAGNOSTIC_LOG_LEVEL);
 
 }
@@ -157,15 +155,14 @@ async function onOptionsChanged(event) {
 		const form = document.forms['options'];
 
 		/** @type {Object.<string, *>} Option data */
-		const options = {
+		const options = normalizeParsingOptions({
 			[optionKeys.LANGUAGE]: form.elements['language'].value,
 			[optionKeys.APPEARANCE_THEME]: normalizeAppearanceTheme(form.elements['appearance-theme'].value),
 			[optionKeys.HISTORY_RENTENTION_PERIOD]: Number(form.elements['history-retention-period'].value),
 			[optionKeys.INSERT_BUTTON_INTO_VIDEO_PAGE]: form.elements['insert-button-into-video-page'].checked,
-			[optionKeys.PARSING_SERVER_ENDPOINT]: normalizeParsingServerEndpoint(form.elements['parsing-server-endpoint'].value),
-			[optionKeys.PARSING_SERVER_MODE]: normalizeParsingServerMode(form.elements['parsing-server-mode'].value),
+			[optionKeys.PARSING_CHANNEL]: form.elements['parsing-channel'].value,
 			[optionKeys.DIAGNOSTIC_LOG_LEVEL]: normalizeDiagnosticLogLevel(form.elements['diagnostic-log-level'].value)
-		};
+		});
 		debug.log('options:', options);
 
 		/* Save option data to storage */
@@ -212,40 +209,6 @@ function normalizeDiagnosticLogLevel(logLevel) {
 	}
 
 	return diagnosticLogLevels.ERROR;
-
-}
-
-/**
- * Normalize parsing server mode option.
- * @param {string} mode - Server mode
- * @returns {string} Normalized server mode
- */
-function normalizeParsingServerMode(mode) {
-
-	if (Object.values(parsingServerModes).includes(mode)) {
-		return mode;
-	}
-
-	return parsingServerModes.JSON;
-
-}
-
-/**
- * Normalize parsing server endpoint option.
- * @param {string} endpoint - Server endpoint
- * @returns {string} Normalized endpoint
- */
-function normalizeParsingServerEndpoint(endpoint) {
-
-	try {
-		const url = new URL(endpoint);
-		if (['http:', 'https:'].includes(url.protocol) === false) {
-			throw new Error('Unsupported protocol');
-		}
-		return url.toString();
-	} catch (error) {
-		return defaultVideoParsingEndpoint;
-	}
 
 }
 

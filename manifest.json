@@ -2,7 +2,7 @@
 	"manifest_version": 3,
 	"name": "__MSG_extension_name__",
 	"description": "__MSG_extension_description__",
-	"version": "2.0.4",
+	"version": "2.0.6",
 	"default_locale": "en",
 	"icons": {
 		"256": "icons/ChromeIcon_256x256.png"
@@ -10,8 +10,11 @@
 	"host_permissions": [
 		"https://api.bilibili.com/*",
 		"https://api.squidtail.com/bili2vrc/*",
-		"https://*/*",
-		"http://*/*"
+		"https://ckapi.sevenbrothers.cn/bili/*",
+		"*://*.bilivideo.com/*",
+		"*://*.bilivideo.cn/*",
+		"*://*.akamaized.net/*",
+		"*://*.cloudfront.net/*"
 	],
 	"permissions": [
 		"storage",
@@ -68,7 +71,6 @@
 				"html/en/popup/processing.html",
 				"html/en/popup/too-frequent-parsing-request.html",
 				"html/en/popup/unknown-error.html",
-				"html/en/popup/url-composition-successful.html",
 				"html/ja/popup/clipboard-write-failed.html",
 				"html/ja/popup/clipboard-write-successful.html",
 				"html/ja/popup/fetch-failed.html",
@@ -79,7 +81,6 @@
 				"html/ja/popup/processing.html",
 				"html/ja/popup/too-frequent-parsing-request.html",
 				"html/ja/popup/unknown-error.html",
-				"html/ja/popup/url-composition-successful.html",
 				"html/zh-CN/popup/clipboard-write-failed.html",
 				"html/zh-CN/popup/clipboard-write-successful.html",
 				"html/zh-CN/popup/fetch-failed.html",
@@ -90,7 +91,6 @@
 				"html/zh-CN/popup/processing.html",
 				"html/zh-CN/popup/too-frequent-parsing-request.html",
 				"html/zh-CN/popup/unknown-error.html",
-				"html/zh-CN/popup/url-composition-successful.html",
 				"html/zh-TW/popup/clipboard-write-failed.html",
 				"html/zh-TW/popup/clipboard-write-successful.html",
 				"html/zh-TW/popup/fetch-failed.html",
@@ -101,7 +101,6 @@
 				"html/zh-TW/popup/processing.html",
 				"html/zh-TW/popup/too-frequent-parsing-request.html",
 				"html/zh-TW/popup/unknown-error.html",
-				"html/zh-TW/popup/url-composition-successful.html",
 				"html/common/history-item.html",
 				"images/ButtonIcon_24x24.html",
 				"changelog.html",

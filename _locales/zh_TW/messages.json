@@ -194,59 +194,34 @@
 		"description": "オプション > 全般 > 動画ページに動画変換ボタンを挿入する"
 	},
 
-	"options_general_parsingServerEndpoint": {
-		"message": "Video parsing server endpoint",
-		"description": "Options > General > Video parsing server endpoint"
+	"options_general_parsingChannel": {
+		"message": "解析通道",
+		"description": "Options > General > Parsing channel"
 	},
 
-	"options_general_resetParsingServerEndpoint": {
-		"message": "恢復預設解析連結",
-		"description": "Options > General > Reset video parsing endpoint"
+	"options_general_parsingChannel_default": {
+		"message": "預設解析",
+		"description": "Options > General > Parsing channel"
 	},
 
-	"options_general_resetParsingServerEndpoint_reset": {
+	"options_general_parsingChannel_local": {
+		"message": "本機解析",
+		"description": "Options > General > Parsing channel"
+	},
+
+	"options_general_parsingChannel_pureK": {
+		"message": "純K",
+		"description": "Options > General > Parsing channel"
+	},
+
+	"options_general_resetParsingChannel": {
+		"message": "恢復預設解析通道",
+		"description": "Options > General > Parsing channel"
+	},
+
+	"options_general_resetParsingChannel_reset": {
 		"message": "恢復預設",
-		"description": "Options > General > Reset video parsing endpoint > Restore default"
-	},
-
-	"options_general_parsingServerMode": {
-		"message": "解析伺服器模式",
-		"description": "Options > General > Video parsing server mode"
-	},
-
-	"options_general_parsingServerMode_json": {
-		"message": "預設 JSON API",
-		"description": "Options > General > Video parsing server mode > Default JSON API"
-	},
-
-	"options_general_parsingServerMode_redirectUrl": {
-		"message": "URL 跳轉",
-		"description": "Options > General > Video parsing server mode > URL redirect"
-	},
-
-	"options_general_parsingServerMode_urlConcatenation": {
-		"message": "連結拼接",
-		"description": "Options > General > Video parsing server mode > URL concatenation"
-	},
-
-	"options_general_parsingServerFormat_text": {
-		"message": "這裡應該填寫：",
-		"description": "Options > General > Video parsing server endpoint format"
-	},
-
-	"options_general_parsingServerFormat_json": {
-		"message": "預設 JSON API：填寫 JSON 解析服務位址，例如 https://api.squidtail.com/bili2vrc/parse/",
-		"description": "Options > General > Video parsing server endpoint format > JSON"
-	},
-
-	"options_general_parsingServerFormat_redirectUrl": {
-		"message": "URL 跳轉：填寫跳轉解析服務的基礎位址，例如 https://example.com/",
-		"description": "Options > General > Video parsing server endpoint format > URL redirect"
-	},
-
-	"options_general_parsingServerFormat_urlConcatenation": {
-		"message": "連結拼接：填寫放在 Bilibili 影片連結前的完整前綴，外掛會自動編碼影片連結。",
-		"description": "Options > General > Video parsing server endpoint format > URL concatenation"
+		"description": "Options > General > Parsing channel"
 	},
 
 	"options_general_tutorial": {
